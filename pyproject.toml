@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mood-radio-mcp"
+version = "0.1.0"
+description = "Community mood-song relay MCP server for PlayMCP."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "fastmcp>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0",
+]
+
+[tool.setuptools]
+packages = ["mood_radio_mcp"]
+
+[project.scripts]
+mood-radio-mcp = "mood_radio_mcp.server:main"
