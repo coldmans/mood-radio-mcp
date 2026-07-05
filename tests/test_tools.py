@@ -165,7 +165,7 @@ def test_get_share_card_accepts_delivery_id(tools: MoodRadioTools) -> None:
     card = tools.get_share_card(delivery_id=delivery["delivery_id"])
 
     assert card["ok"] is True
-    assert "무드라디오" in card["share_card"]["card_text"]
+    assert "노래우체통" in card["share_card"]["card_text"]
     assert delivery["song"]["title"] in card["share_card"]["card_text"]
     assert card["share_card"]["relay_position"] == delivery["song"]["relay"]["depth"] + 1
     assert "노래릴레이" in card["share_card"]["hashtags"]

@@ -28,26 +28,25 @@ def _line(label: str, value: object) -> str:
 async def _collect_demo(client_target: object) -> str:
     run_id = _letters_only_id()
     lines = [
-        "# 무드라디오 MCP 심사 데모",
+        "# 노래우체통 MCP 심사 데모",
         "",
-        "## 1. 무드방 확인",
+        "## 1. 우체통 안내 확인",
         "",
-        'Prompt: "무드라디오 방 목록 보여줘."',
+        'Prompt: "노래우체통은 어떻게 써?"',
         "",
     ]
 
     async with Client(client_target) as client:
-        rooms = await client.call_tool("get_radio_rooms", {})
+        info = await client.call_tool("get_mailbox_info", {})
         lines.extend(
             [
-                "Tool: `get_radio_rooms`",
-                _line("ok", rooms.data["ok"]),
-                _line("room_count", len(rooms.data["rooms"])),
-                _line("policy", rooms.data["policy"]["does_not_store"]),
+                "Tool: `get_mailbox_info`",
+                _line("ok", info.data["ok"]),
+                _line("policy", info.data["policy"]["does_not_store"]),
                 "",
-                "## 2. 상황 문장으로 노래 받기",
+                "## 2. 이전 타자의 노래와 문구 받기",
                 "",
-                'Prompt: "오늘 야근 끝나고 집 가는 길 기분으로 사람들이 남긴 노래 하나 줘."',
+                'Prompt: "노래 하나 받을래."',
                 "",
             ]
         )
@@ -55,7 +54,6 @@ async def _collect_demo(client_target: object) -> str:
         delivery = await client.call_tool(
             "get_song",
             {
-                "situation": "오늘 야근 끝나고 집 가는 길 기분",
                 "listener_hint": f"reviewer-demo-listener-{run_id}",
             },
         )
@@ -64,7 +62,6 @@ async def _collect_demo(client_target: object) -> str:
             [
                 "Tool: `get_song`",
                 _line("delivery_id", delivery.data["delivery_id"]),
-                _line("matched_mood", delivery.data["match"]["matched_mood"]),
                 _line("song", f"{song['artist']} - {song['title']}"),
                 _line("from", song["from"]),
                 _line("message", song["message"]),
@@ -90,35 +87,34 @@ async def _collect_demo(client_target: object) -> str:
                 _line("ok", saved.data["ok"]),
                 _line("saves", saved.data["post"]["stats"]["saves"]),
                 "",
-                "## 4. 다음 사람에게 노래 이어 보내기",
+                "## 4. 내 추천곡과 문구 남기기",
                 "",
-                'Prompt: "방금 받은 노래에서 이어달리기로 aespa의 Supernova를 다음 사람에게 넘겨줘."',
+                'Prompt: "아이유 밤편지를 다음 사람에게 추천해줘. 문구는 오래 간직하고 싶은 밤이야."',
                 "",
             ]
         )
 
-        passed = await client.call_tool(
-            "pass_song",
+        recommended = await client.call_tool(
+            "recommend_song",
             {
                 "delivery_id": delivery.data["delivery_id"],
-                "title": f"Supernova Demo {run_id}",
-                "artist": "aespa",
-                "mood": "운동",
-                "message": f"심사 데모에서 다음 사람에게 넘기는 노래 {run_id}",
+                "title": f"밤편지 Demo {run_id}",
+                "artist": "아이유",
+                "message": f"오래 간직하고 싶은 밤 {run_id}",
                 "nickname": "데모",
-                "actor_hint": f"reviewer-demo-pass-{run_id}",
+                "actor_hint": f"reviewer-demo-recommend-{run_id}",
             },
         )
         lines.extend(
             [
-                "Tool: `pass_song`",
-                _line("ok", passed.data["ok"]),
-                _line("new_post_id", passed.data["post"]["post_id"]),
-                _line("relay_depth", passed.data["relay"]["depth"]),
+                "Tool: `recommend_song`",
+                _line("ok", recommended.data["ok"]),
+                _line("new_post_id", recommended.data["post"]["post_id"]),
+                _line("relay_depth", recommended.data["relay"]["depth"]),
                 "",
                 "## 5. 공유 카드 만들기",
                 "",
-                'Prompt: "방금 넘긴 노래 공유 카드 만들어줘."',
+                'Prompt: "방금 추천한 노래 공유 카드 만들어줘."',
                 "",
             ]
         )
@@ -126,7 +122,7 @@ async def _collect_demo(client_target: object) -> str:
         share_card = await client.call_tool(
             "get_share_card",
             {
-                "post_id": passed.data["post"]["post_id"],
+                "post_id": recommended.data["post"]["post_id"],
             },
         )
         lines.extend(
@@ -137,7 +133,7 @@ async def _collect_demo(client_target: object) -> str:
                 "",
                 "## 6. 릴레이 기록과 커뮤니티 보드 확인",
                 "",
-                'Prompt: "방금 넘긴 노래의 릴레이 기록 보여줘."',
+                'Prompt: "방금 추천한 노래의 릴레이 기록 보여줘."',
                 "",
             ]
         )
@@ -145,29 +141,29 @@ async def _collect_demo(client_target: object) -> str:
         chain = await client.call_tool(
             "get_relay_chain",
             {
-                "post_id": passed.data["post"]["post_id"],
+                "post_id": recommended.data["post"]["post_id"],
             },
         )
-        board = await client.call_tool("get_community_board", {"limit": 3})
+        board = await client.call_tool("get_relay_board", {"limit": 3})
         lines.extend(
             [
-                "Tool: `get_relay_chain`, `get_community_board`",
+                "Tool: `get_relay_chain`, `get_relay_board`",
                 _line("relay_chain_length", len(chain.data["songs"])),
                 _line("relay_board_count", len(board.data["relay_board"])),
                 _line("top_chain_length", board.data["relay_board"][0]["chain_length"]),
                 "",
                 "## 7. 차트 확인",
                 "",
-                'Prompt: "오늘 사람들이 가장 많이 공감한 무드라디오 차트 보여줘."',
+                'Prompt: "인기 추천곡 보여줘."',
                 "",
             ]
         )
 
-        chart = await client.call_tool("get_mood_chart", {"period": "all", "limit": 3})
+        chart = await client.call_tool("get_song_chart", {"period": "all", "limit": 3})
         chart_songs = [f"{item['artist']} - {item['title']}" for item in chart.data["songs"]]
         lines.extend(
             [
-                "Tool: `get_mood_chart`",
+                "Tool: `get_song_chart`",
                 _line("chart_count", len(chart.data["songs"])),
                 _line("top_songs", "; ".join(chart_songs)),
             ]

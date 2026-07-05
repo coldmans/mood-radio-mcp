@@ -22,7 +22,7 @@ def test_index_route_describes_registration_endpoint(tmp_path: Path) -> None:
     payload = response.json()
     assert payload["ok"] is True
     assert payload["service"] == "mood-radio-mcp"
-    assert payload["name"] == "무드라디오 MCP"
+    assert payload["name"] == "노래우체통 MCP"
     assert payload["endpoints"]["mcp"] == "/mcp"
     assert payload["endpoints"]["health"] == "/health"
     assert "PlayMCP" in payload["playmcp_registration"]

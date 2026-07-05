@@ -13,13 +13,13 @@ from .tools import MoodRadioTools
 
 
 TOOL_NAMES = [
-    "get_radio_rooms",
+    "get_mailbox_info",
     "post_song",
-    "pass_song",
+    "recommend_song",
     "get_song",
     "react_song",
-    "get_mood_chart",
-    "get_community_board",
+    "get_song_chart",
+    "get_relay_board",
     "get_relay_chain",
     "get_share_card",
     "report_song",
@@ -29,7 +29,7 @@ TOOL_NAMES = [
 def create_mcp(repository: MoodRadioRepository | None = None) -> FastMCP:
     repo = repository or MoodRadioRepository(Path(os.getenv("MOOD_RADIO_DB", "data/mood-radio.sqlite")))
     tools = MoodRadioTools(repo)
-    mcp = FastMCP("MoodRadio")
+    mcp = FastMCP("SongMailbox")
 
     @mcp.custom_route("/", methods=["GET"], include_in_schema=False)
     async def index(_: Request) -> JSONResponse:
@@ -40,9 +40,9 @@ def create_mcp(repository: MoodRadioRepository | None = None) -> FastMCP:
             {
                 "ok": True,
                 "service": "mood-radio-mcp",
-                "name": "무드라디오 MCP",
+                "name": "노래우체통 MCP",
                 "version": __version__,
-                "description": "같은 기분인 사람들이 남긴 노래와 한 줄 메시지를 주고받는 익명 무드 라디오입니다.",
+                "description": "노래를 한 곡 받으면, 내가 좋아하는 다른 노래와 문구를 다음 사람에게 추천해 릴레이를 잇는 익명 노래우체통입니다.",
                 "endpoints": {
                     "mcp": "/mcp",
                     "health": "/health",
@@ -65,32 +65,30 @@ def create_mcp(repository: MoodRadioRepository | None = None) -> FastMCP:
         return JSONResponse(payload, status_code=200 if payload["ok"] else 503)
 
     @mcp.tool()
-    def get_radio_rooms() -> dict[str, object]:
+    def get_mailbox_info() -> dict[str, object]:
         """
-        무드라디오의 방 목록, 예시 요청, 커뮤니티 정책을 확인합니다.
+        노래우체통의 사용 흐름과 커뮤니티 정책을 확인합니다.
         """
-        return tools.get_radio_rooms()
+        return tools.get_mailbox_info()
 
     @mcp.tool()
     def post_song(
         title: str,
         artist: str,
-        mood: str,
         message: str,
         link: str | None = None,
         nickname: str = "익명",
         actor_hint: str | None = None,
     ) -> dict[str, object]:
         """
-        무드라디오에 노래와 한 줄 메시지를 남깁니다.
+        새 릴레이를 시작할 추천곡과 짧은 문구를 노래우체통에 남깁니다.
 
         actor_hint는 남용 방지를 위한 선택값이며 원문 대신 해시만 저장합니다.
-        가사나 음원 파일은 받지 않습니다. 곡명, 아티스트, 무드, 짧은 메시지만 저장합니다.
+        가사나 음원 파일은 받지 않습니다. 곡명, 아티스트, 짧은 추천 문구만 저장합니다.
         """
         return tools.post_song(
             title=title,
             artist=artist,
-            mood=mood,
             message=message,
             link=link,
             nickname=nickname,
@@ -98,27 +96,25 @@ def create_mcp(repository: MoodRadioRepository | None = None) -> FastMCP:
         )
 
     @mcp.tool()
-    def pass_song(
+    def recommend_song(
         delivery_id: str,
         title: str,
         artist: str,
-        mood: str,
         message: str,
         link: str | None = None,
         nickname: str = "익명",
         actor_hint: str | None = None,
     ) -> dict[str, object]:
         """
-        받은 노래의 delivery_id를 기준으로 다음 사람에게 노래를 이어 보냅니다.
+        받은 노래에 답장하듯, 내가 좋아하는 다른 노래와 짧은 문구를 다음 사람에게 추천합니다.
 
         actor_hint는 남용 방지를 위한 선택값이며 원문 대신 해시만 저장합니다.
-        무드라디오의 핵심 릴레이 기능입니다. 가사나 음원 파일은 받지 않습니다.
+        노래우체통의 핵심 릴레이 기능입니다. message는 필수이며, 가사나 음원 파일은 받지 않습니다.
         """
-        return tools.pass_song(
+        return tools.recommend_song(
             delivery_id=delivery_id,
             title=title,
             artist=artist,
-            mood=mood,
             message=message,
             link=link,
             nickname=nickname,
@@ -127,19 +123,15 @@ def create_mcp(repository: MoodRadioRepository | None = None) -> FastMCP:
 
     @mcp.tool()
     def get_song(
-        mood: str | None = None,
-        situation: str | None = None,
         listener_hint: str | None = None,
         avoid_seen: bool = True,
     ) -> dict[str, object]:
         """
-        같은 기분인 사람들이 남긴 노래 하나를 받습니다.
+        이전 타자가 남긴 노래와 짧은 추천 문구를 하나 받습니다.
 
         listener_hint는 같은 사용자에게 같은 노래를 반복 배달하지 않기 위한 선택값입니다.
         """
         return tools.get_song(
-            mood=mood,
-            situation=situation,
             listener_hint=listener_hint,
             avoid_seen=avoid_seen,
         )
@@ -166,24 +158,23 @@ def create_mcp(repository: MoodRadioRepository | None = None) -> FastMCP:
         )
 
     @mcp.tool()
-    def get_mood_chart(
-        mood: str | None = None,
+    def get_song_chart(
         period: str = "today",
         limit: int = 5,
     ) -> dict[str, object]:
         """
-        무드별 또는 전체 인기 노래 차트를 봅니다.
+        공감과 저장이 많은 인기 추천곡을 봅니다.
 
         period는 today 또는 all입니다.
         """
-        return tools.get_mood_chart(mood=mood, period=period, limit=limit)
+        return tools.get_song_chart(period=period, limit=limit)
 
     @mcp.tool()
-    def get_community_board(mood: str | None = None, limit: int = 5) -> dict[str, object]:
+    def get_relay_board(limit: int = 5) -> dict[str, object]:
         """
-        활성 무드방과 인기 릴레이를 함께 봅니다.
+        길게 이어진 노래 추천 릴레이를 봅니다.
         """
-        return tools.get_community_board(mood=mood, limit=limit)
+        return tools.get_relay_board(limit=limit)
 
     @mcp.tool()
     def get_relay_chain(

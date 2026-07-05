@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "mood-radio-mcp"
 version = "0.1.0"
-description = "Community mood-song relay MCP server for PlayMCP."
+description = "Community song-mailbox relay MCP server for PlayMCP."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

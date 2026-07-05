@@ -50,7 +50,7 @@ MOOD_ALIASES: dict[str, str] = {
     "조깅": "운동",
 }
 
-DEFAULT_MOOD = "위로"
+DEFAULT_MOOD = "노래우체통"
 VALID_MOODS = sorted(set(MOOD_ALIASES.values()))
 
 

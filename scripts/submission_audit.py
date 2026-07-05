@@ -19,13 +19,13 @@ from mood_radio_mcp.tools import MoodRadioTools  # noqa: E402
 
 
 EXPECTED_TOOLS = {
-    "get_radio_rooms": set(),
-    "post_song": {"title", "artist", "mood", "message", "link", "nickname", "actor_hint"},
-    "pass_song": {"delivery_id", "title", "artist", "mood", "message", "link", "nickname", "actor_hint"},
-    "get_song": {"mood", "situation", "listener_hint", "avoid_seen"},
+    "get_mailbox_info": set(),
+    "post_song": {"title", "artist", "message", "link", "nickname", "actor_hint"},
+    "recommend_song": {"delivery_id", "title", "artist", "message", "link", "nickname", "actor_hint"},
+    "get_song": {"listener_hint", "avoid_seen"},
     "react_song": {"reaction", "post_id", "delivery_id", "reply_message", "actor_hint"},
-    "get_mood_chart": {"mood", "period", "limit"},
-    "get_community_board": {"mood", "limit"},
+    "get_song_chart": {"period", "limit"},
+    "get_relay_board": {"limit"},
     "get_relay_chain": {"post_id", "delivery_id", "limit"},
     "get_share_card": {"post_id", "delivery_id"},
     "report_song": {"reason", "post_id", "delivery_id", "actor_hint"},
@@ -50,7 +50,7 @@ REQUIRED_TEXT = {
     ".dockerignore": ("dist/", "data/"),
     "README.md": ("/mcp", "/health", "actor_hint", "가사"),
     "docs/deployment.md": ("preflight_endpoint.py", "build_release_bundle.py", "MOOD_RADIO_POST_LIMIT"),
-    "docs/playmcp-submission.md": ("무드라디오 MCP", "Review Prompts", "https://<kakao-cloud-endpoint>/mcp"),
+    "docs/playmcp-submission.md": ("노래우체통 MCP", "Review Prompts", "https://macmini.taild33a67.ts.net/mcp"),
 }
 
 

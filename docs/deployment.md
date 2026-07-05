@@ -27,7 +27,7 @@ Optional rate limit environment variables use `<limit>/<window_seconds>` format:
 
 ```text
 MOOD_RADIO_POST_LIMIT=20/3600
-MOOD_RADIO_PASS_LIMIT=20/3600
+MOOD_RADIO_RECOMMEND_LIMIT=20/3600
 MOOD_RADIO_REACT_LIMIT=80/3600
 MOOD_RADIO_REPORT_LIMIT=20/3600
 ```
@@ -112,14 +112,14 @@ The manifest includes the archive SHA-256 and per-file SHA-256 hashes.
 ## Operational Notes
 
 - The container runs as the non-root `appuser` user and writes community state under `/data`.
-- SQLite uses WAL mode, foreign keys, a 10 second busy timeout, and indexes for mood lookup, relay chains, deliveries, and reactions.
+- SQLite uses WAL mode, foreign keys, a 10 second busy timeout, and indexes for relay chains, deliveries, reactions, and the legacy internal category column.
 - `/health` exposes aggregate operational counters only; it does not expose submitted messages, listener hints, actor hints, or raw user identifiers.
-- `get_community_board` is computed from persisted posts and relay chains; no external analytics service is required for the MVP.
+- `get_relay_board` is computed from persisted posts and relay chains; no external analytics service is required for the MVP.
 - `get_share_card` is read-only and formats stored song metadata plus relay context into shareable text.
 - Startup includes a lightweight migration for older local SQLite files that do not yet have relay columns.
 - Message, nickname, reply, and report-reason validation rejects direct contact/payment identifiers, inline URLs, spam-like repetition, and lyrics labels before data is stored.
 - Public song metadata rejects direct contact/payment identifiers, inline URLs, and spam-like repetition before data is stored.
-- Exact duplicate song/message posts in the same mood room are rejected for 24 hours to reduce low-effort feed spam.
+- Exact duplicate song/message posts are rejected for 24 hours to reduce low-effort feed spam.
 - Mutating tools accept an optional `actor_hint`. The raw hint is never stored; only a short hash is used for server-side rate limits.
 - User-supplied links are limited to supported music hosts; search links are generated from song metadata when no link is provided.
 - This is enough for a small contest MVP, but a public Kakao Tools version should move community data to a managed database.

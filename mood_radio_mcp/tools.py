@@ -63,10 +63,10 @@ def post_to_public_dict(post: SongPost) -> dict[str, object]:
 
 def post_to_share_card(post: SongPost, *, chain_length: int) -> dict[str, object]:
     relay_position = post.relay_depth + 1
-    hashtags = ["무드라디오", post.mood.replace(" ", ""), "노래릴레이"]
+    hashtags = ["노래우체통", "노래추천", "노래릴레이"]
     card_text = "\n".join(
         [
-            f"[무드라디오] {post.mood} 방에서 도착한 노래",
+            "[노래우체통] 누군가에게 도착한 추천곡",
             f"{post.artist} - {post.title}",
             f'"{post.message}"',
             f"from {post.nickname}",
@@ -86,7 +86,7 @@ def post_to_share_card(post: SongPost, *, chain_length: int) -> dict[str, object
 class MoodRadioTools:
     DEFAULT_RATE_LIMITS = {
         "post_song": _rate_limit_from_env("MOOD_RADIO_POST_LIMIT", (20, 3600)),
-        "pass_song": _rate_limit_from_env("MOOD_RADIO_PASS_LIMIT", (20, 3600)),
+        "recommend_song": _rate_limit_from_env("MOOD_RADIO_RECOMMEND_LIMIT", (20, 3600)),
         "react_song": _rate_limit_from_env("MOOD_RADIO_REACT_LIMIT", (80, 3600)),
         "report_song": _rate_limit_from_env("MOOD_RADIO_REPORT_LIMIT", (20, 3600)),
     }
@@ -146,32 +146,37 @@ class MoodRadioTools:
             "database": database,
         }
 
-    def get_radio_rooms(self) -> dict[str, object]:
+    def get_mailbox_info(self) -> dict[str, object]:
         return {
             "ok": True,
-            "message": "무드라디오는 같은 기분의 사람들이 남긴 노래와 한 줄 메시지를 주고받는 익명 커뮤니티입니다.",
-            "rooms": mood_rooms(),
+            "message": "노래우체통은 누군가의 노래와 문구를 받고, 내가 좋아하는 다른 노래와 문구를 다음 사람에게 추천하는 익명 릴레이입니다.",
             "examples": [
-                "새벽 감성방에서 사람들이 남긴 노래 하나 줘.",
-                "다음 사람에게 검정치마의 기다린 만큼, 더를 남겨줘.",
-                "오늘 사람들이 많이 공감한 무드라디오 차트 보여줘.",
+                "노래 하나 받을래.",
+                "나도 다음 사람에게 노래 추천할래.",
+                "아이유 밤편지를 다음 사람에게 추천해줘.",
             ],
             "policy": {
-                "stores": "곡명, 아티스트, 무드, 한 줄 메시지, 선택 링크",
+                "stores": "곡명, 아티스트, 한 줄 추천 문구, 선택 링크, 릴레이 기록",
                 "does_not_store": "가사, 음원 파일, 개인 연락처",
                 "moderation": "신고가 누적된 게시물은 추천 피드에서 제외됩니다.",
             },
+        }
+
+    def get_radio_rooms(self) -> dict[str, object]:
+        return {
+            **self.get_mailbox_info(),
+            "rooms": mood_rooms(),
         }
 
     def post_song(
         self,
         title: str,
         artist: str,
-        mood: str,
         message: str,
         link: str | None = None,
         nickname: str = "익명",
         actor_hint: str | None = None,
+        mood: str | None = None,
     ) -> dict[str, object]:
         title_clean = clean_text(title, max_length=MAX_TITLE_LENGTH, field_name="title")
         artist_clean = clean_text(artist, max_length=MAX_ARTIST_LENGTH, field_name="artist")
@@ -194,7 +199,7 @@ class MoodRadioTools:
         if duplicate:
             return {
                 "ok": False,
-                "message": "같은 무드방에 같은 노래와 메시지가 최근 24시간 안에 이미 남겨져 있습니다.",
+                "message": "같은 노래와 추천 문구가 최근 24시간 안에 이미 남겨져 있습니다.",
                 "existing_post": post_to_public_dict(duplicate),
             }
         post = self.repository.create_post(
@@ -207,20 +212,20 @@ class MoodRadioTools:
         )
         return {
             "ok": True,
-            "message": "무드방에 노래를 남겼습니다.",
+            "message": "노래우체통에 추천곡과 문구를 남겼습니다.",
             "post": post_to_public_dict(post),
         }
 
-    def pass_song(
+    def recommend_song(
         self,
         delivery_id: str,
         title: str,
         artist: str,
-        mood: str,
         message: str,
         link: str | None = None,
         nickname: str = "익명",
         actor_hint: str | None = None,
+        mood: str | None = None,
     ) -> dict[str, object]:
         title_clean = clean_text(title, max_length=MAX_TITLE_LENGTH, field_name="title")
         artist_clean = clean_text(artist, max_length=MAX_ARTIST_LENGTH, field_name="artist")
@@ -231,7 +236,7 @@ class MoodRadioTools:
         validate_public_metadata(artist_clean, field_name="artist")
         validate_community_text(message_clean)
         validate_community_text(nickname_clean)
-        limited = self._rate_limit_response("pass_song", actor_hint)
+        limited = self._rate_limit_response("recommend_song", actor_hint)
         if limited:
             return limited
         duplicate = self.repository.find_recent_duplicate(
@@ -243,7 +248,7 @@ class MoodRadioTools:
         if duplicate:
             return {
                 "ok": False,
-                "message": "같은 무드방에 같은 노래와 메시지가 최근 24시간 안에 이미 남겨져 있습니다.",
+                "message": "같은 노래와 추천 문구가 최근 24시간 안에 이미 남겨져 있습니다.",
                 "existing_post": post_to_public_dict(duplicate),
             }
         result = self.repository.create_relay_post(
@@ -258,14 +263,15 @@ class MoodRadioTools:
         if result is None:
             return {
                 "ok": False,
-                "message": "이어달릴 수 있는 배달 기록을 찾지 못했습니다.",
+                "message": "답장할 수 있는 노래 배달 기록을 찾지 못했습니다.",
             }
         post, parent = result
         chain = self.repository.relay_chain(post_id=post.id, limit=20)
         return {
             "ok": True,
-            "message": "다음 사람에게 이어질 노래를 남겼습니다.",
-            "from_song": post_to_public_dict(parent),
+            "message": "내 추천곡과 문구를 다음 사람에게 남겼습니다.",
+            "received_song": post_to_public_dict(parent),
+            "recommended_song": post_to_public_dict(post),
             "post": post_to_public_dict(post),
             "relay": {
                 "root_id": post.relay_root_id or post.id,
@@ -273,6 +279,28 @@ class MoodRadioTools:
                 "chain_length": len(chain),
             },
         }
+
+    def pass_song(
+        self,
+        delivery_id: str,
+        title: str,
+        artist: str,
+        message: str,
+        link: str | None = None,
+        nickname: str = "익명",
+        actor_hint: str | None = None,
+        mood: str | None = None,
+    ) -> dict[str, object]:
+        return self.recommend_song(
+            delivery_id=delivery_id,
+            title=title,
+            artist=artist,
+            message=message,
+            link=link,
+            nickname=nickname,
+            actor_hint=actor_hint,
+            mood=mood,
+        )
 
     def get_song(
         self,
@@ -282,7 +310,7 @@ class MoodRadioTools:
         avoid_seen: bool = True,
     ) -> dict[str, object]:
         inferred = infer_mood_from_text(situation)
-        normalized = normalize_mood(mood) if mood else inferred or normalize_mood(None)
+        normalized = normalize_mood(mood) if mood else inferred
         delivery = self.repository.pick_post(
             mood=normalized,
             listener_key=listener_key_from_hint(listener_hint),
@@ -291,17 +319,18 @@ class MoodRadioTools:
         if delivery is None:
             return {
                 "ok": False,
-                "message": f"{normalized} 무드방에 아직 받을 수 있는 노래가 없습니다.",
+                "message": "아직 받을 수 있는 노래가 없습니다.",
                 "available_moods": VALID_MOODS,
             }
         return {
             "ok": True,
             "delivery_id": delivery.delivery_id,
-            "message": f"{normalized} 무드방에서 노래가 도착했습니다.",
+            "message": "누군가의 노래와 추천 문구가 도착했습니다. 마음에 남는 다른 노래와 문구로 다음 사람에게 답장해 주세요.",
+            "next_step": "recommend_song 도구에 delivery_id, title, artist, message를 넣어 다음 사람에게 내 추천곡을 남기세요.",
             "match": {
                 "requested_mood": mood,
                 "situation": situation,
-                "matched_mood": normalized,
+                "matched_mood": normalized or "전체",
                 "matched_from": "mood" if mood else "situation" if inferred else "default",
             },
             "song": post_to_public_dict(delivery.post),
@@ -345,18 +374,25 @@ class MoodRadioTools:
         posts = self.repository.chart(mood=mood, period=period, limit=limit)
         return {
             "ok": True,
-            "message": "무드라디오 차트입니다.",
+            "message": "노래우체통 인기 추천곡입니다.",
             "period": period,
             "mood": normalize_mood(mood) if mood else None,
             "songs": [post_to_public_dict(post) for post in posts],
         }
+
+    def get_song_chart(
+        self,
+        period: str = "today",
+        limit: int = 5,
+    ) -> dict[str, object]:
+        return self.get_mood_chart(mood=None, period=period, limit=limit)
 
     def get_community_board(self, mood: str | None = None, limit: int = 5) -> dict[str, object]:
         relay_items = self.repository.relay_board(mood=mood, limit=limit)
         rooms = self.repository.room_stats()
         return {
             "ok": True,
-            "message": "무드라디오 커뮤니티 보드입니다.",
+            "message": "노래우체통 릴레이 보드입니다.",
             "mood": normalize_mood(mood) if mood else None,
             "active_rooms": rooms,
             "relay_board": [
@@ -373,6 +409,9 @@ class MoodRadioTools:
                 for item in relay_items
             ],
         }
+
+    def get_relay_board(self, limit: int = 5) -> dict[str, object]:
+        return self.get_community_board(mood=None, limit=limit)
 
     def get_relay_chain(
         self,
@@ -409,7 +448,7 @@ class MoodRadioTools:
         chain = self.repository.relay_chain(post_id=target.id, limit=20)
         return {
             "ok": True,
-            "message": "공유하기 좋은 무드라디오 카드 문구입니다.",
+            "message": "공유하기 좋은 노래우체통 카드 문구입니다.",
             "share_card": post_to_share_card(target, chain_length=max(len(chain), 1)),
         }
 

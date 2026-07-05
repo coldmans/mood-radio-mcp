@@ -389,8 +389,12 @@ class MoodRadioRepository:
         }
 
     def pick_post(self, *, mood: str | None, listener_key: str, avoid_seen: bool = True) -> SongDelivery | None:
-        normalized_mood = normalize_mood(mood)
-        params: list[object] = [normalized_mood]
+        normalized_mood = normalize_mood(mood) if mood else None
+        params: list[object] = []
+        mood_clause = ""
+        if normalized_mood:
+            mood_clause = "AND mood = ?"
+            params.append(normalized_mood)
         seen_clause = ""
         if avoid_seen:
             seen_clause = """
@@ -403,8 +407,8 @@ class MoodRadioRepository:
         query = f"""
             SELECT *
             FROM song_posts
-            WHERE mood = ?
-              AND report_count < 3
+            WHERE report_count < 3
+              {mood_clause}
               {seen_clause}
             ORDER BY
               (like_count * 3 + save_count * 2 - skip_count - report_count * 5) DESC,
@@ -418,13 +422,14 @@ class MoodRadioRepository:
                     """
                     SELECT *
                     FROM song_posts
-                    WHERE mood = ? AND report_count < 3
+                    WHERE report_count < 3
+                      {mood_clause}
                     ORDER BY
                       (like_count * 3 + save_count * 2 - skip_count - report_count * 5) DESC,
                       RANDOM()
                     LIMIT 1
                     """,
-                    (normalized_mood,),
+                    params[:1] if normalized_mood else [],
                 ).fetchone()
             if row is None:
                 return None

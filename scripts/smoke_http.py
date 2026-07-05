@@ -21,13 +21,13 @@ async def smoke(endpoint: str) -> None:
         require(
             set(tool_names)
             >= {
-                "get_radio_rooms",
+                "get_mailbox_info",
                 "post_song",
-                "pass_song",
+                "recommend_song",
                 "get_song",
                 "react_song",
-                "get_mood_chart",
-                "get_community_board",
+                "get_song_chart",
+                "get_relay_board",
                 "get_relay_chain",
                 "get_share_card",
                 "report_song",
@@ -35,32 +35,27 @@ async def smoke(endpoint: str) -> None:
             "missing expected tools",
         )
 
-        rooms = await client.call_tool("get_radio_rooms", {})
-        print("rooms_ok:", rooms.data["ok"])
-        require(rooms.data["ok"] is True, "get_radio_rooms failed")
+        info = await client.call_tool("get_mailbox_info", {})
+        print("info_ok:", info.data["ok"])
+        require(info.data["ok"] is True, "get_mailbox_info failed")
 
-        chart = await client.call_tool("get_mood_chart", {"period": "all", "limit": 3})
+        chart = await client.call_tool("get_song_chart", {"period": "all", "limit": 3})
         print("chart_count:", len(chart.data["songs"]))
-        require(chart.data["ok"] is True, "get_mood_chart failed")
+        require(chart.data["ok"] is True, "get_song_chart failed")
 
-        situation_delivery = await client.call_tool(
+        delivery = await client.call_tool(
             "get_song",
             {
-                "situation": "오늘 야근 끝나고 집 가는 길 기분",
-                "listener_hint": "smoke-situation",
+                "listener_hint": "smoke-listener",
             },
         )
-        print("situation_match:", situation_delivery.data["match"]["matched_mood"])
-        require(situation_delivery.data["ok"] is True, "situation get_song failed")
-        require(
-            situation_delivery.data["match"]["matched_mood"] == "퇴근길",
-            "situation prompt did not match 퇴근길",
-        )
+        print("delivery_id:", delivery.data["delivery_id"])
+        require(delivery.data["ok"] is True, "get_song failed")
 
         saved = await client.call_tool(
             "react_song",
             {
-                "delivery_id": situation_delivery.data["delivery_id"],
+                "delivery_id": delivery.data["delivery_id"],
                 "reaction": "save",
                 "actor_hint": f"smoke-react-{run_id}",
             },
@@ -68,27 +63,18 @@ async def smoke(endpoint: str) -> None:
         print("save_ok:", saved.data["ok"])
         require(saved.data["ok"] is True, "react_song by delivery_id failed")
 
-        delivery = await client.call_tool(
-            "get_song",
-            {
-                "mood": "위로",
-                "listener_hint": "smoke-relay",
-            },
-        )
-        require(delivery.data["ok"] is True, "get_song for relay failed")
-        passed = await client.call_tool(
-            "pass_song",
+        recommended = await client.call_tool(
+            "recommend_song",
             {
                 "delivery_id": delivery.data["delivery_id"],
-                "title": f"Supernova Smoke {run_id}",
-                "artist": "aespa",
-                "mood": "운동",
-                "message": f"스모크 테스트에서 다음 사람에게 넘긴 노래 {run_id}",
-                "actor_hint": f"smoke-pass-{run_id}",
+                "title": f"밤편지 Smoke {run_id}",
+                "artist": "아이유",
+                "message": f"스모크 테스트에서 다음 사람에게 남긴 추천 문구 {run_id}",
+                "actor_hint": f"smoke-recommend-{run_id}",
             },
         )
-        print("pass_ok:", passed.data["ok"])
-        require(passed.data["ok"] is True, "pass_song failed")
+        print("recommend_ok:", recommended.data["ok"])
+        require(recommended.data["ok"] is True, "recommend_song failed")
 
         chain = await client.call_tool(
             "get_relay_chain",
@@ -102,16 +88,16 @@ async def smoke(endpoint: str) -> None:
         share_card = await client.call_tool(
             "get_share_card",
             {
-                "post_id": passed.data["post"]["post_id"],
+                "post_id": recommended.data["post"]["post_id"],
             },
         )
         print("share_card_ok:", share_card.data["ok"])
         require(share_card.data["ok"] is True, "get_share_card failed")
-        require("무드라디오" in share_card.data["share_card"]["card_text"], "share card missing brand text")
+        require("노래우체통" in share_card.data["share_card"]["card_text"], "share card missing brand text")
 
-        board = await client.call_tool("get_community_board", {"limit": 3})
+        board = await client.call_tool("get_relay_board", {"limit": 3})
         print("relay_board_count:", len(board.data["relay_board"]))
-        require(board.data["ok"] is True, "get_community_board failed")
+        require(board.data["ok"] is True, "get_relay_board failed")
 
 
 def main() -> None:

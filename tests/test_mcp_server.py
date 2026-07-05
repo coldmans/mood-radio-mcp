@@ -20,13 +20,13 @@ def test_mcp_lists_expected_tools(tmp_path: Path) -> None:
 
         tool_names = {tool.name for tool in tools}
         assert tool_names == {
-            "get_radio_rooms",
+            "get_mailbox_info",
             "post_song",
-            "pass_song",
+            "recommend_song",
             "get_song",
             "react_song",
-            "get_mood_chart",
-            "get_community_board",
+            "get_song_chart",
+            "get_relay_board",
             "get_relay_chain",
             "get_share_card",
             "report_song",
@@ -64,7 +64,6 @@ def test_mcp_post_get_and_react_flow(tmp_path: Path) -> None:
                 {
                     "title": "기다린 만큼, 더",
                     "artist": "검정치마",
-                    "mood": "새벽감성",
                     "message": "천천히 괜찮아져도 돼",
                     "nickname": "밤손님",
                 },
@@ -74,12 +73,11 @@ def test_mcp_post_get_and_react_flow(tmp_path: Path) -> None:
             delivery_result = await client.call_tool(
                 "get_song",
                 {
-                    "mood": "새벽",
                     "listener_hint": "mcp-test",
                 },
             )
             assert delivery_result.data["ok"] is True
-            assert delivery_result.data["song"]["mood"] == "새벽"
+            assert delivery_result.data["song"]["message"]
 
             reaction_result = await client.call_tool(
                 "react_song",
@@ -93,12 +91,11 @@ def test_mcp_post_get_and_react_flow(tmp_path: Path) -> None:
             assert reaction_result.data["post"]["stats"]["likes"] >= 1
 
             pass_result = await client.call_tool(
-                "pass_song",
+                "recommend_song",
                 {
                     "delivery_id": delivery_result.data["delivery_id"],
                     "title": "Supernova",
                     "artist": "aespa",
-                    "mood": "운동",
                     "message": "다음 사람은 이걸로 조금 더 힘내기",
                 },
             )
@@ -123,7 +120,7 @@ def test_mcp_post_get_and_react_flow(tmp_path: Path) -> None:
             assert card_result.data["ok"] is True
             assert "Supernova" in card_result.data["share_card"]["card_text"]
 
-            board_result = await client.call_tool("get_community_board", {"limit": 5})
+            board_result = await client.call_tool("get_relay_board", {"limit": 5})
             assert board_result.data["ok"] is True
             assert board_result.data["relay_board"][0]["chain_length"] >= 2
 
