@@ -2,7 +2,7 @@
 
 ## Runtime
 
-Mood Radio MCP runs as a Streamable HTTP MCP server.
+Song Mailbox MCP runs as a Streamable HTTP MCP server.
 
 ```text
 MCP endpoint: /mcp
@@ -79,7 +79,7 @@ Recommended flow:
 3. Run `uv run --python 3.11 python scripts/build_release_bundle.py` if you need a tarball for upload or handoff.
 4. Run `uv run --python 3.11 python scripts/reviewer_demo.py --endpoint https://<endpoint>/mcp` for a human-readable demo transcript.
 5. Run `uv run --python 3.11 python scripts/preflight_endpoint.py https://<endpoint>`.
-6. Confirm the preflight prints `health_ok: True`, `ready_for_feed: True`, `situation_match: 퇴근길`, `pass_ok: True`, and `share_card_ok: True`.
+6. Confirm the preflight prints `health_ok: True`, `ready_for_feed: True`, `delivery_id: ...`, `recommend_ok: True`, and `share_card_ok: True`.
 7. Register the endpoint in PlayMCP as a temporary registration.
 8. Test the review prompts in `docs/playmcp-submission.md`.
 9. When final, request PlayMCP review.

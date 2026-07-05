@@ -1,6 +1,6 @@
 # Mac Mini Deployment
 
-This runbook is for hosting Mood Radio MCP on a Mac mini with `uv`, `launchd`, and a public tunnel.
+This runbook is for hosting Song Mailbox MCP on a Mac mini with `uv`, `launchd`, and a public tunnel.
 
 ## Runtime Service
 

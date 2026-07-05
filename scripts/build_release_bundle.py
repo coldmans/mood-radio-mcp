@@ -129,7 +129,7 @@ def build_release_bundle(root: Path = PROJECT_ROOT, output_dir: Path | None = No
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Build a Mood Radio MCP release tarball and checksum manifest.")
+    parser = argparse.ArgumentParser(description="Build a Song Mailbox MCP release tarball and checksum manifest.")
     parser.add_argument("--root", default=str(PROJECT_ROOT), help="Project root. Defaults to this repository.")
     parser.add_argument("--output-dir", default=None, help="Output directory. Defaults to <root>/dist.")
     args = parser.parse_args()

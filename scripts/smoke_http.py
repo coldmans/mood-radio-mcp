@@ -22,7 +22,6 @@ async def smoke(endpoint: str) -> None:
             set(tool_names)
             >= {
                 "get_mailbox_info",
-                "post_song",
                 "recommend_song",
                 "get_song",
                 "react_song",
@@ -101,7 +100,7 @@ async def smoke(endpoint: str) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Smoke test a Mood Radio MCP HTTP endpoint.")
+    parser = argparse.ArgumentParser(description="Smoke test a Song Mailbox MCP HTTP endpoint.")
     parser.add_argument("endpoint", help="Streamable HTTP endpoint, e.g. https://example.com/mcp")
     args = parser.parse_args()
     asyncio.run(smoke(args.endpoint))

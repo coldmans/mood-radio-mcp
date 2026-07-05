@@ -80,7 +80,7 @@ async def preflight(endpoint: str, *, require_feed: bool) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Preflight a deployed Mood Radio MCP endpoint.")
+    parser = argparse.ArgumentParser(description="Preflight a deployed Song Mailbox MCP endpoint.")
     parser.add_argument("endpoint", help="Base URL, health URL, or MCP URL, e.g. https://example.com/mcp")
     parser.add_argument(
         "--allow-empty-feed",

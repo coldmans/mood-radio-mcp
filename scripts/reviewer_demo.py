@@ -182,7 +182,7 @@ async def build_demo(endpoint: str | None = None, db_path: Path | None = None) -
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Print a reviewer-friendly Mood Radio MCP demo transcript.")
+    parser = argparse.ArgumentParser(description="Print a reviewer-friendly Song Mailbox MCP demo transcript.")
     parser.add_argument("--endpoint", help="Optional Streamable HTTP endpoint, e.g. https://example.com/mcp")
     args = parser.parse_args()
     print(asyncio.run(build_demo(args.endpoint)), end="")

@@ -21,7 +21,6 @@ def test_mcp_lists_expected_tools(tmp_path: Path) -> None:
         tool_names = {tool.name for tool in tools}
         assert tool_names == {
             "get_mailbox_info",
-            "post_song",
             "recommend_song",
             "get_song",
             "react_song",
@@ -59,17 +58,6 @@ def test_mcp_post_get_and_react_flow(tmp_path: Path) -> None:
     async def run() -> None:
         mcp = create_mcp(MoodRadioRepository(tmp_path / "mcp-flow.sqlite"))
         async with Client(mcp) as client:
-            post_result = await client.call_tool(
-                "post_song",
-                {
-                    "title": "기다린 만큼, 더",
-                    "artist": "검정치마",
-                    "message": "천천히 괜찮아져도 돼",
-                    "nickname": "밤손님",
-                },
-            )
-            post_id = post_result.data["post"]["post_id"]
-
             delivery_result = await client.call_tool(
                 "get_song",
                 {
@@ -78,6 +66,7 @@ def test_mcp_post_get_and_react_flow(tmp_path: Path) -> None:
             )
             assert delivery_result.data["ok"] is True
             assert delivery_result.data["song"]["message"]
+            assert "mood" not in delivery_result.data["song"]
 
             reaction_result = await client.call_tool(
                 "react_song",

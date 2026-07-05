@@ -43,7 +43,6 @@ def post_to_public_dict(post: SongPost) -> dict[str, object]:
         "post_id": post.id,
         "title": post.title,
         "artist": post.artist,
-        "mood": post.mood,
         "message": post.message,
         "from": post.nickname,
         "link": post.link,
@@ -152,8 +151,8 @@ class MoodRadioTools:
             "message": "노래우체통은 누군가의 노래와 문구를 받고, 내가 좋아하는 다른 노래와 문구를 다음 사람에게 추천하는 익명 릴레이입니다.",
             "examples": [
                 "노래 하나 받을래.",
-                "나도 다음 사람에게 노래 추천할래.",
-                "아이유 밤편지를 다음 사람에게 추천해줘.",
+                "나도 다음 사람에게 노래와 문구를 남길래.",
+                "아이유 밤편지를 다음 사람에게 추천해줘. 문구는 '오늘 밤 오래 들고 가도 좋은 노래'야.",
             ],
             "policy": {
                 "stores": "곡명, 아티스트, 한 줄 추천 문구, 선택 링크, 릴레이 기록",
@@ -317,24 +316,28 @@ class MoodRadioTools:
             avoid_seen=avoid_seen,
         )
         if delivery is None:
-            return {
+            response: dict[str, object] = {
                 "ok": False,
                 "message": "아직 받을 수 있는 노래가 없습니다.",
-                "available_moods": VALID_MOODS,
             }
-        return {
+            if mood or situation:
+                response["available_moods"] = VALID_MOODS
+            return response
+        response = {
             "ok": True,
             "delivery_id": delivery.delivery_id,
             "message": "누군가의 노래와 추천 문구가 도착했습니다. 마음에 남는 다른 노래와 문구로 다음 사람에게 답장해 주세요.",
             "next_step": "recommend_song 도구에 delivery_id, title, artist, message를 넣어 다음 사람에게 내 추천곡을 남기세요.",
-            "match": {
+            "song": post_to_public_dict(delivery.post),
+        }
+        if mood or situation:
+            response["match"] = {
                 "requested_mood": mood,
                 "situation": situation,
                 "matched_mood": normalized or "전체",
                 "matched_from": "mood" if mood else "situation" if inferred else "default",
-            },
-            "song": post_to_public_dict(delivery.post),
-        }
+            }
+        return response
 
     def react_song(
         self,
@@ -372,13 +375,15 @@ class MoodRadioTools:
         if period not in {"today", "all"}:
             raise ValueError("period must be either 'today' or 'all'.")
         posts = self.repository.chart(mood=mood, period=period, limit=limit)
-        return {
+        response: dict[str, object] = {
             "ok": True,
             "message": "노래우체통 인기 추천곡입니다.",
             "period": period,
-            "mood": normalize_mood(mood) if mood else None,
             "songs": [post_to_public_dict(post) for post in posts],
         }
+        if mood:
+            response["mood"] = normalize_mood(mood)
+        return response
 
     def get_song_chart(
         self,
@@ -411,7 +416,24 @@ class MoodRadioTools:
         }
 
     def get_relay_board(self, limit: int = 5) -> dict[str, object]:
-        return self.get_community_board(mood=None, limit=limit)
+        relay_items = self.repository.relay_board(mood=None, limit=limit)
+        return {
+            "ok": True,
+            "message": "노래우체통 릴레이 보드입니다.",
+            "relay_board": [
+                {
+                    "root_id": item["root_id"],
+                    "chain_length": item["chain_length"],
+                    "max_depth": item["max_depth"],
+                    "likes": item["like_count"],
+                    "saves": item["save_count"],
+                    "last_post_at": item["last_post_at"],
+                    "started_with": post_to_public_dict(item["root"]),
+                    "latest_song": post_to_public_dict(item["latest"]),
+                }
+                for item in relay_items
+            ],
+        }
 
     def get_relay_chain(
         self,

@@ -28,7 +28,8 @@ def test_post_and_get_song(tools: MoodRadioTools) -> None:
     delivery = tools.get_song(mood="새벽", listener_hint="tester")
 
     assert delivery["ok"] is True
-    assert delivery["song"]["mood"] == "새벽"
+    assert "mood" not in delivery["song"]
+    assert delivery["match"]["matched_mood"] == "새벽"
     assert delivery["song"]["post_id"] == post_id or delivery["song"]["title"]
 
 
@@ -73,8 +74,8 @@ def test_get_song_infers_mood_from_situation_when_mood_is_omitted(tools: MoodRad
     delivery = tools.get_song(situation="비 오는 퇴근길에 어울리는 노래", listener_hint="situation-only")
 
     assert delivery["ok"] is True
-    assert delivery["song"]["mood"] == "퇴근길"
     assert delivery["match"]["matched_from"] == "situation"
+    assert delivery["match"]["matched_mood"] == "퇴근길"
 
 
 def test_get_song_infers_mood_from_review_prompt_situation(tools: MoodRadioTools) -> None:
@@ -84,7 +85,6 @@ def test_get_song_infers_mood_from_review_prompt_situation(tools: MoodRadioTools
     )
 
     assert delivery["ok"] is True
-    assert delivery["song"]["mood"] == "퇴근길"
     assert delivery["match"]["matched_mood"] == "퇴근길"
 
 
@@ -92,8 +92,8 @@ def test_get_song_keeps_explicit_mood_over_situation(tools: MoodRadioTools) -> N
     delivery = tools.get_song(mood="위로", situation="퇴근길", listener_hint="explicit-mood")
 
     assert delivery["ok"] is True
-    assert delivery["song"]["mood"] == "위로"
     assert delivery["match"]["matched_from"] == "mood"
+    assert delivery["match"]["matched_mood"] == "위로"
 
 
 def test_react_song_updates_chart(tools: MoodRadioTools) -> None:

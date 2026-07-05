@@ -14,7 +14,6 @@ from .tools import MoodRadioTools
 
 TOOL_NAMES = [
     "get_mailbox_info",
-    "post_song",
     "recommend_song",
     "get_song",
     "react_song",
@@ -70,30 +69,6 @@ def create_mcp(repository: MoodRadioRepository | None = None) -> FastMCP:
         노래우체통의 사용 흐름과 커뮤니티 정책을 확인합니다.
         """
         return tools.get_mailbox_info()
-
-    @mcp.tool()
-    def post_song(
-        title: str,
-        artist: str,
-        message: str,
-        link: str | None = None,
-        nickname: str = "익명",
-        actor_hint: str | None = None,
-    ) -> dict[str, object]:
-        """
-        새 릴레이를 시작할 추천곡과 짧은 문구를 노래우체통에 남깁니다.
-
-        actor_hint는 남용 방지를 위한 선택값이며 원문 대신 해시만 저장합니다.
-        가사나 음원 파일은 받지 않습니다. 곡명, 아티스트, 짧은 추천 문구만 저장합니다.
-        """
-        return tools.post_song(
-            title=title,
-            artist=artist,
-            message=message,
-            link=link,
-            nickname=nickname,
-            actor_hint=actor_hint,
-        )
 
     @mcp.tool()
     def recommend_song(

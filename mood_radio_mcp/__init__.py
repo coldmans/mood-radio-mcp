@@ -1,4 +1,4 @@
-"""Mood Radio MCP package."""
+"""Song Mailbox MCP package."""
 
 __all__ = ["__version__"]
 

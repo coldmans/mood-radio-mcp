@@ -20,7 +20,6 @@ from mood_radio_mcp.tools import MoodRadioTools  # noqa: E402
 
 EXPECTED_TOOLS = {
     "get_mailbox_info": set(),
-    "post_song": {"title", "artist", "message", "link", "nickname", "actor_hint"},
     "recommend_song": {"delivery_id", "title", "artist", "message", "link", "nickname", "actor_hint"},
     "get_song": {"listener_hint", "avoid_seen"},
     "react_song": {"reaction", "post_id", "delivery_id", "reply_message", "actor_hint"},
@@ -149,7 +148,7 @@ async def audit(root: Path) -> list[str]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Audit Mood Radio MCP files and tool schema before PlayMCP submission.")
+    parser = argparse.ArgumentParser(description="Audit Song Mailbox MCP files and tool schema before PlayMCP submission.")
     parser.add_argument("--root", default=str(PROJECT_ROOT), help="Project root. Defaults to this repository.")
     args = parser.parse_args()
 
