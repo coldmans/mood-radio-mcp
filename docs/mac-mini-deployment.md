@@ -78,6 +78,15 @@ launchctl kickstart -k "gui/$(id -u)/com.moodradio.mcp"
 
 ## Public Endpoint Options
 
+Tailnet-internal endpoint verified on the Mac mini:
+
+```text
+http://100.105.154.87:8787/mcp
+http://macmini.taild33a67.ts.net:8787/mcp
+```
+
+This is useful for development from devices logged into the same Tailscale tailnet, but it is not enough for PlayMCP review because external PlayMCP servers are not inside the tailnet.
+
 Preferred stable option:
 
 ```bash
@@ -86,6 +95,16 @@ tailscale funnel status
 ```
 
 This requires Funnel to be enabled for the tailnet.
+If the CLI prints an enablement URL such as `https://login.tailscale.com/f/funnel?...`, open it once as the tailnet owner/admin, enable Funnel, then rerun the command above.
+
+Tailnet-only Tailscale Serve option:
+
+```bash
+tailscale serve --bg --yes http://127.0.0.1:8787
+tailscale serve status
+```
+
+This also requires Serve to be enabled for the tailnet. If the CLI prints `https://login.tailscale.com/f/serve?...`, approve it once, then rerun the command.
 
 Temporary Cloudflare quick tunnel option:
 
