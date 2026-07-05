@@ -94,6 +94,12 @@ tailscale funnel --bg --yes 8787
 tailscale funnel status
 ```
 
+Current verified public endpoint:
+
+```text
+https://macmini.taild33a67.ts.net/mcp
+```
+
 This requires Funnel to be enabled for the tailnet.
 If the CLI prints an enablement URL such as `https://login.tailscale.com/f/funnel?...`, open it once as the tailnet owner/admin, enable Funnel, then rerun the command above.
 

@@ -42,7 +42,7 @@ Generate a reviewer-friendly tool-call transcript:
 
 ```bash
 uv run --python 3.11 python scripts/reviewer_demo.py
-uv run --python 3.11 python scripts/reviewer_demo.py --endpoint https://<kakao-cloud-endpoint>/mcp
+uv run --python 3.11 python scripts/reviewer_demo.py --endpoint https://macmini.taild33a67.ts.net/mcp
 ```
 
 ## Endpoint
@@ -50,7 +50,7 @@ uv run --python 3.11 python scripts/reviewer_demo.py --endpoint https://<kakao-c
 Register the Streamable HTTP endpoint:
 
 ```text
-https://<kakao-cloud-endpoint>/mcp
+https://macmini.taild33a67.ts.net/mcp
 ```
 
 Local default:
@@ -62,13 +62,13 @@ http://127.0.0.1:8000/mcp
 Health check for manual/cloud verification:
 
 ```text
-https://<kakao-cloud-endpoint>/health
+https://macmini.taild33a67.ts.net/health
 ```
 
 Browser metadata for manual/cloud verification:
 
 ```text
-https://<kakao-cloud-endpoint>/
+https://macmini.taild33a67.ts.net/
 ```
 
 ## Environment
