@@ -133,6 +133,7 @@ uv run --python 3.11 python scripts/preflight_endpoint.py http://127.0.0.1:8000
 
 제출용 콘솔 문구와 심사 프롬프트 초안은 `docs/playmcp-submission.md`에 정리했습니다.
 배포 절차와 헬스체크는 `docs/deployment.md`에 정리했습니다.
+맥미니 실행 절차는 `docs/mac-mini-deployment.md`에 정리했습니다.
 
 ## Safety Notes
 

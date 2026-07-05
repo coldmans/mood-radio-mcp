@@ -6,6 +6,10 @@
 
 무드라디오 MCP
 
+### Representative Image
+
+`assets/playmcp-icon.png`
+
 ### Short Description
 
 같은 기분인 사람들이 남긴 노래가 도착하고, 받은 사람이 다음 사람에게 다시 노래를 넘기는 익명 무드 라디오입니다.

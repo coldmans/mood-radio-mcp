@@ -15,6 +15,7 @@ INCLUDE_PATHS = (
     ".dockerignore",
     ".env.example",
     ".gitignore",
+    "assets",
     "Dockerfile",
     "Makefile",
     "README.md",
